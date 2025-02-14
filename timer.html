@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер обратного отсчёта</title>
+    <style>
+        body {
+            text-align: center;
+            padding: 50px;
+            font-family: Arial, sans-serif;
+        }
+        .timer {
+            font-size: 2rem;
+            margin: 20px 0;
+            transition: font-size 0.3s ease;
+        }
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--fullscreen-font-size, 10rem);
+            z-index: 1000;
+        }
+        .hidden { display: none; }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        input[type=number] {
+            width: 100px;
+            padding: 8px;
+            font-size: 1rem;
+            text-align: center;
+            margin: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-info { background-color: #17a2b8; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <h1 id="title">Таймер обратного отсчёта</h1>
+        <div>
+            <input type="number" id="hours" placeholder="Часы" min="0" value="0">
+            <input type="number" id="minutes" placeholder="Минуты" min="0" value="0">
+            <input type="number" id="seconds" placeholder="Секунды" min="0" value="0">
+        </div>
+        <div class="timer" id="timer">00:00:00</div>
+        <button class="btn-primary" onclick="startTimer()" id="startBtn">Старт</button>
+        <button class="btn-warning" onclick="pauseTimer()" id="pauseBtn">Пауза</button>
+        <button class="btn-danger" onclick="resetTimer()" id="resetBtn">Сброс</button>
+        <button class="btn-secondary" onclick="toggleFullscreen()" id="fullscreenBtn">Полноэкранный режим</button>
+        <div class="mt-2">
+            <label for="fontSize" id="fontSizeLabel">Размер цифр на полный экран</label>
+            <input type="number" id="fontSize" placeholder="rem" value="10" min="5" max="50" step="1">
+        </div>
+        <div class="mt-3">
+            <button class="btn-info" onclick="setLanguage('ru')">Рус</button>
+            <button class="btn-info" onclick="setLanguage('en')">Eng</button>
+        </div>
+    </div>
+    <div id="fullscreenTimer" class="fullscreen hidden" onclick="toggleFullscreen()">
+        <span id="fullscreenTimerText">00:00:00</span>
+    </div>
+
+    <script>
+        let timerInterval;
+        let totalSeconds = 0;
+        let isRunning = false;
+        let isFullscreen = false;
+        
+        const translations = {
+            ru: {
+                title: "Таймер обратного отсчёта",
+                startBtn: "Старт",
+                pauseBtn: "Пауза",
+                resetBtn: "Сброс",
+                fullscreenBtn: "Полноэкранный режим",
+                fontSizeLabel: "Размер цифр на полный экран"
+            },
+            en: {
+                title: "Countdown Timer",
+                startBtn: "Start",
+                pauseBtn: "Pause",
+                resetBtn: "Reset",
+                fullscreenBtn: "Fullscreen Mode",
+                fontSizeLabel: "Digit size in full screen"
+            }
+        };
+        
+        function setLanguage(lang) {
+            document.getElementById("title").textContent = translations[lang].title;
+            document.getElementById("startBtn").textContent = translations[lang].startBtn;
+            document.getElementById("pauseBtn").textContent = translations[lang].pauseBtn;
+            document.getElementById("resetBtn").textContent = translations[lang].resetBtn;
+            document.getElementById("fullscreenBtn").textContent = translations[lang].fullscreenBtn;
+            document.getElementById("fontSizeLabel").textContent = translations[lang].fontSizeLabel;
+        }
+
+        function updateDisplay() {
+            let h = Math.floor(totalSeconds / 3600);
+            let m = Math.floor((totalSeconds % 3600) / 60);
+            let s = totalSeconds % 60;
+            let timeString = String(h).padStart(2, '0') + ":" + 
+                             String(m).padStart(2, '0') + ":" + 
+                             String(s).padStart(2, '0');
+            document.getElementById("timer").textContent = timeString;
+            document.getElementById("fullscreenTimerText").textContent = timeString;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            if (totalSeconds === 0) {
+                let hours = parseInt(document.getElementById("hours").value) || 0;
+                let minutes = parseInt(document.getElementById("minutes").value) || 0;
+                let seconds = parseInt(document.getElementById("seconds").value) || 0;
+                totalSeconds = hours * 3600 + minutes * 60 + seconds;
+            }
+            timerInterval = setInterval(() => {
+                if (totalSeconds > 0) {
+                    totalSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            totalSeconds = 0;
+            isRunning = false;
+            updateDisplay();
+        }
+
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            document.getElementById("fullscreenTimer").classList.toggle("hidden", !isFullscreen);
+            if (isFullscreen) {
+                let fontSize = document.getElementById("fontSize").value || 10;
+                document.documentElement.style.setProperty('--fullscreen-font-size', fontSize + 'rem');
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
